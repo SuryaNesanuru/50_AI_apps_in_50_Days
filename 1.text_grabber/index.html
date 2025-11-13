@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Text Grabber</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>🤖 AI Text Grabber</h1>
+        <p>Upload an image to extract the text.</p>
+
+        <label for="imageInput" class="upload-label">Choose Image</label>
+        <input type="file" id="imageInput" accept="image/*">
+
+        <img id="imagePreview" src="#" alt="Image Preview" class="hidden">
+
+        <p id="status">Please upload an image to begin.</p>
+
+        <textarea id="resultText" placeholder="Your extracted text will appear here..." readonly></textarea>
+
+        <button id="copyButton" disabled>Copy Text</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@latest/dist/tesseract.min.js"></script>
+    
+    <script src="script.js"></script>
+
+</body>
+</html>
