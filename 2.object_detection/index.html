@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Object Detector</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>🕵️ AI "What's in the Pic?" Detector</h1>
+        <p>Upload an image to see what objects the AI can find.</p>
+
+        <label for="imageInput" class="upload-label">Choose Image</label>
+        <input type="file" id="imageInput" accept="image/*">
+
+        <p id="status">Please upload an image to begin.</p>
+        
+        <div class="canvas-container">
+            <canvas id="outputCanvas"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest/dist/coco-ssd.min.js"></script>
+    
+    <script src="script.js"></script>
+
+</body>
+</html>
