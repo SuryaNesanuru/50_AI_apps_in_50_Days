@@ -1,0 +1,78 @@
+/* General Styles */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+}
+
+/* Main App Container */
+.container {
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px; /* A bit wider for images */
+    text-align: center;
+}
+
+h1 {
+    color: #1c1e21;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+p {
+    color: #606770;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* File Input (Styled as a button) */
+#imageInput {
+    display: none; /* Hide the default input */
+}
+
+.upload-label {
+    display: inline-block;
+    padding: 12px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    background-color: #007bff;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.upload-label:hover {
+    background-color: #0056b3;
+}
+
+/* Status Message */
+#status {
+    font-style: italic;
+    color: #606770;
+    margin-top: 1rem;
+    min-height: 1.2em; /* Prevents layout jump */
+}
+
+/* Canvas Container */
+.canvas-container {
+    margin-top: 1.5rem;
+    border: 1px solid #dddfe2;
+    border-radius: 6px;
+    overflow: hidden; /* Ensures canvas corners are rounded */
+}
+
+/* Canvas Output */
+#outputCanvas {
+    max-width: 100%; /* Makes the canvas responsive */
+    height: auto;
+    display: none; /* Hidden until an image is loaded */
+}
