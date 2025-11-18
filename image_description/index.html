@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Describer</title>
+    <!-- We'll use Tailwind CSS for quick, modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the app */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        /* Simple spinner animation */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #3b82f6; /* Blue color */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        /* Hide element by default */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white w-full max-w-xl p-6 sm:p-8 rounded-2xl shadow-lg">
+
+        <!-- Header -->
+        <div class="text-center">
+            <h1 class="text-3xl font-bold text-gray-900">🖼️ AI Image Describer</h1>
+            <p class="mt-2 text-lg text-gray-600">Upload an image, and I'll tell you what's in it.</p>
+        </div>
+
+        <!-- Image Upload -->
+        <div class="mt-6">
+            <label for="image-input" class="block text-sm font-medium text-gray-700">Upload your image:</label>
+            <input id="image-input" type="file" accept="image/*" class="mt-1 block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-lg file:border-0
+                file:text-sm file:font-semibold
+                file:bg-blue-50 file:text-blue-700
+                hover:file:bg-blue-100 cursor-pointer"/>
+        </div>
+
+        <!-- Image Preview -->
+        <div id="preview-container" class="mt-4 hidden">
+            <img id="image-preview" src="" alt="Image preview" class="w-full h-auto max-h-64 object-contain rounded-lg border border-gray-200 p-1" />
+        </div>
+
+        <!-- Generate Button -->
+        <button id="generate-button" class="mt-6 w-full flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-lg font-semibold text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-300" disabled>
+            <!-- Spinner (hidden by default) -->
+            <div id="spinner" class="spinner hidden"></div>
+            <!-- Button Text -->
+            <span id="button-text">Generate Description</span>
+        </button>
+
+        <!-- Result Area -->
+        <div id="result-container" class="mt-6 hidden">
+            <h2 class="text-xl font-semibold text-gray-900">AI Description:</h2>
+            <div id="result-box" class="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-200 text-gray-700 whitespace-pre-wrap">
+                <!-- AI-generated description will appear here -->
+            </div>
+        </div>
+        
+        <!-- Error Message -->
+        <div id="error-box" class="mt-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg hidden">
+            <!-- Error messages will appear here -->
+        </div>
+
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const imageInput = document.getElementById('image-input');
+        const imagePreview = document.getElementById('image-preview');
+        const previewContainer = document.getElementById('preview-container');
+        const generateButton = document.getElementById('generate-button');
+        const spinner = document.getElementById('spinner');
+        const buttonText = document.getElementById('button-text');
+        const resultContainer = document.getElementById('result-container');
+        const resultBox = document.getElementById('result-box');
+        const errorBox = document.getElementById('error-box');
+
+        // --- API Configuration ---
+        const apiKey = ""; // Leave blank, environment will provide it
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+        // --- App State ---
+        let base64ImageData = null;
+        let imageMimeType = null;
+
+        // --- Event Listeners ---
+        imageInput.addEventListener('change', handleImageUpload);
+        generateButton.addEventListener('click', handleGenerate);
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                generateButton.disabled = true;
+                previewContainer.classList.add('hidden');
+                base64ImageData = null;
+                imageMimeType = null;
+                return;
+            }
+
+            // Show image preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                previewContainer.classList.remove('hidden');
+                
+                // Convert to Base64 and store it
+                // e.g., "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ..."
+                // We need to strip the prefix "data:image/jpeg;base64,"
+                const base64String = e.target.result.split(',')[1];
+                base64ImageData = base64String;
+                imageMimeType = file.type; // e.g., "image/jpeg"
+                
+                generateButton.disabled = false;
+                resultContainer.classList.add('hidden');
+                errorBox.classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function handleGenerate() {
+            if (!base64ImageData || !imageMimeType) {
+                showError("Please upload an image first.");
+                return;
+            }
+
+            // 1. Set Loading State
+            setLoading(true);
+
+            // 2. Construct the API Payload
+            const payload = {
+                contents: [
+                    {
+                        role: "user",
+                        parts: [
+                            { "text": "Describe this image in detail. What is happening in the scene?" },
+                            {
+                                "inlineData": {
+                                    "mimeType": imageMimeType,
+                                    "data": base64ImageData
+                                }
+                            }
+                        ]
+                    }
+                ],
+            };
+
+            // 3. Make API Call with Retry Logic
+            try {
+                const text = await fetchWithRetry(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                // 4. Display Result
+                displayResult(text);
+
+            } catch (error) {
+                console.error('Error generating content:', error);
+                showError(`Failed to generate description. Error: ${error.message}`);
+            } finally {
+                // 5. Reset Loading State
+                setLoading(false);
+            }
+        }
+        
+        // --- API Fetch with Exponential Backoff ---
+        async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`API Error (${response.status}): ${errorData.error?.message || response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (text) {
+                        return text; // Success!
+                    } else {
+                        throw new Error("Invalid response structure from API.");
+                    }
+
+                } catch (error) {
+                    console.warn(`Attempt ${i + 1} failed: ${error.message}`);
+                    if (i < retries - 1) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2; // Exponential backoff
+                    } else {
+                        throw error; // Last attempt, re-throw
+                    }
+                }
+            }
+            throw new Error("Max retries reached.");
+        }
+
+        // --- UI Helper Functions ---
+
+        function setLoading(isLoading) {
+            if (isLoading) {
+                generateButton.disabled = true;
+                spinner.classList.remove('hidden');
+                buttonText.textContent = 'Analyzing...';
+                errorBox.classList.add('hidden');
+                resultContainer.classList.add('hidden');
+            } else {
+                generateButton.disabled = false;
+                spinner.classList.add('hidden');
+                buttonText.textContent = 'Generate Description';
+            }
+        }
+
+        function displayResult(description) {
+            resultBox.textContent = description;
+            resultContainer.classList.remove('hidden');
+            errorBox.classList.add('hidden');
+        }
+
+        function showError(message) {
+            errorBox.textContent = message;
+            errorBox.classList.remove('hidden');
+            resultContainer.classList.add('hidden');
+        }
+
+    </script>
+</body>
+</html>
