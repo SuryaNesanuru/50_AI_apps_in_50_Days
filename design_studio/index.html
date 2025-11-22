@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Design Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .swatch-card {
+            transition: transform 0.2s;
+        }
+        .swatch-card:hover {
+            transform: translateY(-4px);
+        }
+        /* Dynamic Font Classes will be injected here */
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-12 px-4 sm:px-6">
+
+    <div class="w-full max-w-4xl space-y-8">
+        
+        <!-- Header -->
+        <div class="text-center space-y-2">
+            <div class="inline-flex items-center justify-center p-3 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-200 mb-2">
+                <i data-lucide="palette" class="text-white w-8 h-8"></i>
+            </div>
+            <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">AI Design Studio</h1>
+            <p class="text-slate-500 text-lg">Describe a brand or vibe, and I'll generate a design system.</p>
+        </div>
+
+        <!-- Input Section -->
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-100 p-2">
+            <div class="relative flex items-center">
+                <input id="prompt-input" type="text" 
+                    class="w-full pl-6 pr-32 py-4 text-lg bg-transparent focus:outline-none text-slate-700 placeholder:text-slate-400"
+                    placeholder="e.g., A futuristic electric car company" 
+                />
+                <button id="generate-btn" 
+                    class="absolute right-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl px-6 py-2.5 transition-all flex items-center gap-2 disabled:bg-indigo-300 disabled:cursor-not-allowed">
+                    <span id="btn-text">Generate</span>
+                    <div id="btn-spinner" class="spinner hidden"></div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Error Container -->
+        <div id="error-container" class="hidden bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 text-center text-sm font-medium animate-pulse"></div>
+
+        <!-- Results Section (Hidden by default) -->
+        <div id="results-container" class="hidden space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            
+            <!-- 1. Color Palette -->
+            <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100">
+                <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6 flex items-center gap-2">
+                    <i data-lucide="droplet" class="w-4 h-4"></i> Color Palette
+                </h2>
+                <div id="color-grid" class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <!-- Swatches injected here -->
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                <!-- 2. Typography -->
+                <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100 flex flex-col">
+                    <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6 flex items-center gap-2">
+                        <i data-lucide="type" class="w-4 h-4"></i> Typography
+                    </h2>
+                    
+                    <div class="flex-1 space-y-6 border-l-2 border-indigo-100 pl-6">
+                        <div>
+                            <p class="text-xs text-slate-400 mb-1">Heading Font</p>
+                            <h3 id="font-heading-preview" class="text-3xl text-slate-800 leading-tight">
+                                The Quick Brown Fox
+                            </h3>
+                            <p id="font-heading-name" class="text-sm text-indigo-600 font-medium mt-1"></p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 mb-1">Body Font</p>
+                            <p id="font-body-preview" class="text-slate-600 leading-relaxed">
+                                Use this typeface for longer paragraphs, descriptions, and user interface elements. It should be legible and easy to read at small sizes.
+                            </p>
+                            <p id="font-body-name" class="text-sm text-indigo-600 font-medium mt-1"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. UI Component Preview -->
+                <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100 flex flex-col">
+                    <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6 flex items-center gap-2">
+                        <i data-lucide="layout" class="w-4 h-4"></i> UI Preview
+                    </h2>
+                    
+                    <div class="flex-1 bg-slate-50 rounded-xl border border-dashed border-slate-200 flex flex-col items-center justify-center p-8 gap-4">
+                        <!-- We will inject the font families here directly via style attribute -->
+                        <div id="preview-card" class="bg-white p-6 rounded-xl shadow-lg max-w-xs w-full">
+                            <h4 id="preview-heading" class="text-xl mb-2">Welcome Back</h4>
+                            <p id="preview-body" class="text-sm text-slate-500 mb-4">Start your journey with us today.</p>
+                            <button id="preview-button">Get Started</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // --- Config ---
+        const apiKey = ""; // Environment will provide this
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+        // --- DOM Elements ---
+        const promptInput = document.getElementById('prompt-input');
+        const generateBtn = document.getElementById('generate-btn');
+        const btnText = document.getElementById('btn-text');
+        const btnSpinner = document.getElementById('btn-spinner');
+        const errorContainer = document.getElementById('error-container');
+        const resultsContainer = document.getElementById('results-container');
+        const colorGrid = document.getElementById('color-grid');
+
+        // Font Elements
+        const fontHeadingPreview = document.getElementById('font-heading-preview');
+        const fontBodyPreview = document.getElementById('font-body-preview');
+        const fontHeadingName = document.getElementById('font-heading-name');
+        const fontBodyName = document.getElementById('font-body-name');
+
+        // UI Preview Elements
+        const previewCard = document.getElementById('preview-card');
+        const previewHeading = document.getElementById('preview-heading');
+        const previewBody = document.getElementById('preview-body');
+        const previewButton = document.getElementById('preview-button');
+
+        // --- AI Schema ---
+        // We want strict JSON back from Gemini
+        const designSchema = {
+            type: "OBJECT",
+            properties: {
+                colors: {
+                    type: "ARRAY",
+                    items: { type: "STRING" },
+                    description: "Array of 5 hex color codes (e.g., #FFFFFF)"
+                },
+                colorNames: {
+                    type: "ARRAY",
+                    items: { type: "STRING" },
+                    description: "Creative names for the 5 colors"
+                },
+                headingFont: {
+                    type: "STRING",
+                    description: "A popular Google Font name for headings (e.g., Playfair Display, Montserrat)"
+                },
+                bodyFont: {
+                    type: "STRING",
+                    description: "A popular Google Font name for body text (e.g., Roboto, Open Sans)"
+                },
+                buttonClass: {
+                    type: "STRING",
+                    description: "Tailwind CSS classes for a primary button. Use arbitrary values for colors like bg-[#hex] text-[#hex] rounded-xl etc."
+                }
+            },
+            required: ["colors", "colorNames", "headingFont", "bodyFont", "buttonClass"]
+        };
+
+        // --- Event Listeners ---
+        generateBtn.addEventListener('click', handleGenerate);
+        promptInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleGenerate();
+        });
+
+        // --- Main Logic ---
+        async function handleGenerate() {
+            const query = promptInput.value.trim();
+            if (!query) return;
+
+            setLoading(true);
+
+            const prompt = `
+                Act as a world-class UI designer. 
+                Create a cohesive design system for a brand described as: "${query}".
+                
+                1. Select 5 harmonious colors.
+                2. Select 2 distinct, popular Google Fonts that pair well.
+                3. Create Tailwind CSS classes for a modern button that fits the vibe. 
+                   IMPORTANT: For colors in Tailwind, use the bracket syntax with the hex codes you selected. 
+                   Example: "bg-[#FF5733] text-white hover:bg-[#C70039] py-2 px-4 rounded-full shadow-lg font-bold".
+            `;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: designSchema
+                }
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("API Request Failed");
+
+                const data = await response.json();
+                const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (!jsonText) throw new Error("No data returned");
+
+                const designSystem = JSON.parse(jsonText);
+                
+                applyDesignSystem(designSystem);
+
+            } catch (error) {
+                console.error(error);
+                showError("Failed to generate design. Please try again.");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function applyDesignSystem(ds) {
+            // 1. Load Fonts dynamically from Google
+            const fontLink = document.createElement('link');
+            fontLink.href = `https://fonts.googleapis.com/css2?family=${ds.headingFont.replace(/\s+/g, '+')}&family=${ds.bodyFont.replace(/\s+/g, '+')}&display=swap`;
+            fontLink.rel = 'stylesheet';
+            document.head.appendChild(fontLink);
+
+            // 2. Render Colors
+            colorGrid.innerHTML = '';
+            ds.colors.forEach((color, index) => {
+                const div = document.createElement('div');
+                div.className = "swatch-card group cursor-pointer";
+                div.innerHTML = `
+                    <div class="h-24 rounded-xl shadow-inner mb-2 ring-1 ring-black/5" style="background-color: ${color}"></div>
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <p class="font-bold text-slate-800 text-sm">${ds.colorNames[index]}</p>
+                            <p class="font-mono text-xs text-slate-400 uppercase">${color}</p>
+                        </div>
+                    </div>
+                `;
+                // Click to copy
+                div.addEventListener('click', () => {
+                    navigator.clipboard.writeText(color);
+                    // Visual feedback could go here
+                });
+                colorGrid.appendChild(div);
+            });
+
+            // 3. Apply Fonts
+            fontHeadingPreview.style.fontFamily = `"${ds.headingFont}", serif`; // Fallback helps if load is slow
+            fontHeadingName.textContent = ds.headingFont;
+
+            fontBodyPreview.style.fontFamily = `"${ds.bodyFont}", sans-serif`;
+            fontBodyName.textContent = ds.bodyFont;
+
+            // 4. Update Preview Card
+            previewHeading.style.fontFamily = `"${ds.headingFont}", serif`;
+            previewBody.style.fontFamily = `"${ds.bodyFont}", sans-serif`;
+            previewButton.style.fontFamily = `"${ds.bodyFont}", sans-serif`;
+            
+            // Apply Tailwind classes to button (clearing old ones first)
+            previewButton.className = ""; // Reset
+            // We can't just set className because Tailwind needs to scan classes.
+            // However, since we are using the CDN script, it observes DOM changes!
+            // We just need to wait a tick or ensure the classes are valid.
+            previewButton.className = `transition-all duration-300 ${ds.buttonClass}`;
+
+            resultsContainer.classList.remove('hidden');
+        }
+
+        // --- Helpers ---
+        function setLoading(isLoading) {
+            if (isLoading) {
+                generateBtn.disabled = true;
+                btnText.classList.add('hidden');
+                btnSpinner.classList.remove('hidden');
+                errorContainer.classList.add('hidden');
+                resultsContainer.classList.add('hidden');
+            } else {
+                generateBtn.disabled = false;
+                btnText.classList.remove('hidden');
+                btnSpinner.classList.add('hidden');
+            }
+        }
+
+        function showError(msg) {
+            errorContainer.textContent = msg;
+            errorContainer.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
