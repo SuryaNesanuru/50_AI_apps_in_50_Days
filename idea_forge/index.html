@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IdeaForge: AI Startup Validator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-left-color: #818cf8;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .animate-in {
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Card Hover Effect */
+        .stat-card {
+            transition: transform 0.2s, background 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            background: rgba(30, 41, 59, 0.9);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 sm:p-8">
+
+    <main class="w-full max-w-5xl space-y-8">
+        
+        <!-- Header -->
+        <div class="text-center space-y-4 pt-8">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-indigo-300 text-sm font-medium mb-2">
+                <i data-lucide="zap" class="w-4 h-4"></i>
+                <span>From Concept to Brand in Seconds</span>
+            </div>
+            <h1 class="text-5xl sm:text-6xl font-extrabold tracking-tight">
+                Idea<span class="gradient-text">Forge</span>
+            </h1>
+            <p class="text-slate-400 text-lg max-w-xl mx-auto">
+                Validate your startup ideas instantly. Generate a logo, business strategy, and brand identity with AI.
+            </p>
+        </div>
+
+        <!-- Input Section -->
+        <div class="glass rounded-2xl p-2 max-w-2xl mx-auto w-full relative group">
+            <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl opacity-20 group-hover:opacity-40 transition duration-500 blur"></div>
+            <div class="relative flex items-center bg-slate-900 rounded-xl">
+                <input id="idea-input" type="text" 
+                    class="w-full bg-transparent text-white placeholder-slate-500 px-6 py-4 text-lg focus:outline-none"
+                    placeholder="e.g. Uber for dog walking..."
+                    autocomplete="off"
+                >
+                <button id="forge-btn" class="mr-2 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-lg font-bold transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span>Forge</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loader" class="hidden flex-col items-center justify-center py-12 space-y-4">
+            <div class="spinner w-12 h-12 border-4"></div>
+            <p class="text-indigo-300 font-mono text-sm animate-pulse">Analyzing Market • Designing Logo • Drafting Strategy</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-box" class="hidden max-w-md mx-auto bg-red-500/10 border border-red-500/20 text-red-200 p-4 rounded-xl text-center text-sm"></div>
+
+        <!-- Results Grid -->
+        <div id="results" class="hidden grid-cols-1 md:grid-cols-3 gap-6 w-full animate-in">
+            
+            <!-- Left Col: Brand Identity -->
+            <div class="md:col-span-1 space-y-6">
+                <!-- Logo Card -->
+                <div class="glass rounded-2xl p-6 text-center space-y-4">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Brand Identity</h3>
+                    
+                    <div class="relative aspect-square w-full bg-white rounded-xl overflow-hidden flex items-center justify-center group">
+                        <img id="logo-img" class="w-full h-full object-contain p-4 transition-transform duration-700 group-hover:scale-110" alt="Generated Logo">
+                        <div class="absolute inset-0 bg-black/5"></div> <!-- Texture overlay -->
+                    </div>
+
+                    <div>
+                        <h2 id="brand-name" class="text-3xl font-bold text-white mb-1">BrandName</h2>
+                        <p id="brand-slogan" class="text-sm text-indigo-400 italic">"The slogan goes here"</p>
+                    </div>
+                </div>
+
+                <!-- Target Audience -->
+                <div class="glass rounded-2xl p-6 space-y-3">
+                    <div class="flex items-center gap-2 text-emerald-400 mb-2">
+                        <i data-lucide="users" class="w-5 h-5"></i>
+                        <h3 class="font-bold">Target Audience</h3>
+                    </div>
+                    <p id="target-audience" class="text-slate-300 text-sm leading-relaxed"></p>
+                </div>
+            </div>
+
+            <!-- Right Col: Strategy -->
+            <div class="md:col-span-2 space-y-6">
+                
+                <!-- SWOT Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="stat-card glass p-5 rounded-xl border-l-4 border-emerald-500">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="trending-up" class="w-4 h-4 text-emerald-500"></i>
+                            <h4 class="font-bold text-slate-200">Strengths</h4>
+                        </div>
+                        <ul id="list-strengths" class="text-sm text-slate-400 space-y-1 list-disc list-inside"></ul>
+                    </div>
+
+                    <div class="stat-card glass p-5 rounded-xl border-l-4 border-amber-500">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500"></i>
+                            <h4 class="font-bold text-slate-200">Weaknesses</h4>
+                        </div>
+                        <ul id="list-weaknesses" class="text-sm text-slate-400 space-y-1 list-disc list-inside"></ul>
+                    </div>
+                </div>
+
+                <!-- Pitch & Monetization -->
+                <div class="glass rounded-2xl p-6 space-y-6">
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Elevator Pitch</h3>
+                        <p id="elevator-pitch" class="text-lg text-slate-100 font-medium leading-relaxed"></p>
+                    </div>
+
+                    <div class="border-t border-slate-700/50 pt-6">
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Monetization Strategy</h3>
+                        <div class="flex flex-wrap gap-2" id="monetization-tags">
+                            <!-- Tags injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Bar -->
+                <div class="flex justify-end gap-3">
+                    <button onclick="copyPitch()" class="glass hover:bg-slate-800 text-slate-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                        <i data-lucide="copy" class="w-4 h-4"></i> Copy Pitch
+                    </button>
+                    <button onclick="downloadLogo()" class="glass hover:bg-slate-800 text-slate-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                        <i data-lucide="download" class="w-4 h-4"></i> Save Logo
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        // --- Configuration ---
+        const apiKey = ""; // Provided by environment
+        const textApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+        const imageApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
+
+        // --- DOM ---
+        const input = document.getElementById('idea-input');
+        const btn = document.getElementById('forge-btn');
+        const loader = document.getElementById('loader');
+        const results = document.getElementById('results');
+        const errorBox = document.getElementById('error-box');
+
+        // Output Elements
+        const elName = document.getElementById('brand-name');
+        const elSlogan = document.getElementById('brand-slogan');
+        const elLogo = document.getElementById('logo-img');
+        const elAudience = document.getElementById('target-audience');
+        const elPitch = document.getElementById('elevator-pitch');
+        const elStrengths = document.getElementById('list-strengths');
+        const elWeaknesses = document.getElementById('list-weaknesses');
+        const elTags = document.getElementById('monetization-tags');
+
+        // --- Event Listeners ---
+        btn.addEventListener('click', handleForge);
+        input.addEventListener('keydown', (e) => e.key === 'Enter' && handleForge());
+
+        async function handleForge() {
+            const idea = input.value.trim();
+            if (!idea) return;
+
+            // Reset UI
+            results.classList.remove('flex'); // remove flex if added previously
+            results.classList.add('hidden');
+            errorBox.classList.add('hidden');
+            loader.classList.remove('hidden');
+            loader.classList.add('flex');
+            btn.disabled = true;
+
+            try {
+                // Execute Parallel Requests
+                const [analysisData, logoBase64] = await Promise.all([
+                    analyzeIdea(idea),
+                    generateLogo(idea)
+                ]);
+
+                renderResults(analysisData, logoBase64);
+
+            } catch (err) {
+                console.error(err);
+                errorBox.textContent = "Forging failed. The AI might be overloaded. Try again.";
+                errorBox.classList.remove('hidden');
+            } finally {
+                loader.classList.add('hidden');
+                loader.classList.remove('flex');
+                btn.disabled = false;
+            }
+        }
+
+        // --- API 1: Text Analysis ---
+        async function analyzeIdea(idea) {
+            const schema = {
+                type: "OBJECT",
+                properties: {
+                    name: { type: "STRING", description: "A catchy, modern startup name" },
+                    slogan: { type: "STRING", description: "Short, punchy tagline" },
+                    pitch: { type: "STRING", description: "2 sentence elevator pitch" },
+                    audience: { type: "STRING", description: "Description of the target customer persona" },
+                    strengths: { type: "ARRAY", items: { type: "STRING" }, description: "3 key strengths/pros" },
+                    weaknesses: { type: "ARRAY", items: { type: "STRING" }, description: "3 potential risks/cons" },
+                    monetization: { type: "ARRAY", items: { type: "STRING" }, description: "3 ways to make money (e.g. Subscription, Ads)" },
+                    logoPrompt: { type: "STRING", description: "A visual description for a minimalist vector logo representing this brand" }
+                },
+                required: ["name", "slogan", "pitch", "audience", "strengths", "weaknesses", "monetization", "logoPrompt"]
+            };
+
+            const prompt = `Analyze this startup idea: "${idea}". Act as a VC and Brand Strategist. Return a JSON object.`;
+
+            const response = await fetch(textApiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { responseMimeType: "application/json", responseSchema: schema }
+                })
+            });
+
+            if (!response.ok) throw new Error("Text API Error");
+            const data = await response.json();
+            return JSON.parse(data.candidates[0].content.parts[0].text);
+        }
+
+        // --- API 2: Image Generation ---
+        async function generateLogo(idea) {
+            // We'll use a generic prompt template + the idea to save a round trip, 
+            // or we could chain it (wait for text API to give prompt). 
+            // For speed, let's prompt directly based on the user idea, forcing a specific style.
+            const prompt = `
+                Vector app icon logo for a startup described as: ${idea}. 
+                Minimalist, flat design, modern, high contrast, vector art, white background. 
+                Professional Dribbble style.
+            `;
+
+            const response = await fetch(imageApiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    instances: [{ prompt: prompt }],
+                    parameters: { sampleCount: 1 }
+                })
+            });
+
+            if (!response.ok) throw new Error("Image API Error");
+            const data = await response.json();
+            return data.predictions[0].bytesBase64Encoded;
+        }
+
+        // --- Rendering ---
+        function renderResults(data, logoBase64) {
+            // Text Data
+            elName.textContent = data.name;
+            elSlogan.textContent = `"${data.slogan}"`;
+            elAudience.textContent = data.audience;
+            elPitch.textContent = data.pitch;
+
+            // Lists
+            elStrengths.innerHTML = data.strengths.map(s => `<li>${s}</li>`).join('');
+            elWeaknesses.innerHTML = data.weaknesses.map(w => `<li>${w}</li>`).join('');
+            
+            // Tags
+            elTags.innerHTML = data.monetization.map(m => `
+                <span class="px-3 py-1 rounded-full bg-slate-800 text-indigo-400 text-xs font-bold border border-slate-700">
+                    ${m}
+                </span>
+            `).join('');
+
+            // Logo
+            elLogo.src = `data:image/png;base64,${logoBase64}`;
+
+            // Show
+            results.classList.remove('hidden');
+            results.classList.add('grid');
+        }
+
+        // --- Utilities ---
+        function copyPitch() {
+            navigator.clipboard.writeText(`${elName.textContent}: ${elPitch.textContent}`);
+            alert("Pitch copied to clipboard!");
+        }
+
+        function downloadLogo() {
+            const link = document.createElement('a');
+            link.href = elLogo.src;
+            link.download = `${elName.textContent}-Logo.png`;
+            link.click();
+        }
+
+    </script>
+</body>
+</html>
