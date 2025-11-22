@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DreamStream: Infinite Adventure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Cinzel:wght@600&display=swap');
+
+        body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+            font-family: 'Crimson Pro', serif;
+        }
+
+        h1, h2, h3, .cinzel {
+            font-family: 'Cinzel', serif;
+        }
+
+        .fade-in { animation: fadeIn 1s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .image-skeleton {
+            background: linear-gradient(110deg, #1e293b 8%, #334155 18%, #1e293b 33%);
+            background-size: 200% 100%;
+            animation: shine 1.5s linear infinite;
+        }
+        @keyframes shine { to { background-position-x: -200%; } }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
+
+    <div class="max-w-3xl w-full bg-slate-900/80 backdrop-blur-md border border-slate-700 rounded-xl shadow-2xl overflow-hidden min-h-[80vh] flex flex-col relative">
+        
+        <!-- Header -->
+        <header class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-950/50">
+            <div class="flex items-center gap-2 text-indigo-400">
+                <i data-lucide="compass" class="w-6 h-6"></i>
+                <span class="cinzel font-bold text-lg tracking-wider">DreamStream</span>
+            </div>
+            <div class="text-xs text-slate-500 font-mono">
+                Turn: <span id="turn-count">0</span>
+            </div>
+        </header>
+
+        <!-- Game Content -->
+        <main class="flex-1 flex flex-col overflow-y-auto relative" id="game-container">
+            
+            <!-- Start Screen -->
+            <div id="start-screen" class="flex flex-col items-center justify-center flex-1 p-8 text-center space-y-8 fade-in">
+                <div class="space-y-4">
+                    <h1 class="text-4xl sm:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-300 pb-2">
+                        Choose Your Path
+                    </h1>
+                    <p class="text-slate-400 text-lg italic max-w-md mx-auto">
+                        An infinite narrative engine. Every choice paints a new world.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg">
+                    <button onclick="startGame('Cyberpunk Noir')" class="genre-btn group relative p-4 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg transition-all hover:scale-105">
+                        <div class="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"></div>
+                        <span class="cinzel font-bold text-pink-400 block mb-1">Cyberpunk</span>
+                        <span class="text-xs text-slate-400">High tech, low life. Neon rain.</span>
+                    </button>
+                    <button onclick="startGame('Dark Fantasy')" class="genre-btn group relative p-4 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg transition-all hover:scale-105">
+                        <div class="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"></div>
+                        <span class="cinzel font-bold text-amber-400 block mb-1">Dark Fantasy</span>
+                        <span class="text-xs text-slate-400">Ancient ruins, magic, and peril.</span>
+                    </button>
+                    <button onclick="startGame('Cosmic Horror')" class="genre-btn group relative p-4 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg transition-all hover:scale-105">
+                        <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"></div>
+                        <span class="cinzel font-bold text-emerald-400 block mb-1">Cosmic Horror</span>
+                        <span class="text-xs text-slate-400">The unknown lurks in the stars.</span>
+                    </button>
+                    <button onclick="startGame('Post-Apocalyptic')" class="genre-btn group relative p-4 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg transition-all hover:scale-105">
+                        <div class="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"></div>
+                        <span class="cinzel font-bold text-orange-400 block mb-1">Wasteland</span>
+                        <span class="text-xs text-slate-400">Survival in a broken world.</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Gameplay Screen (Hidden initially) -->
+            <div id="game-screen" class="hidden flex-col w-full">
+                
+                <!-- Scene Image Area -->
+                <div class="relative w-full h-64 sm:h-80 bg-slate-950 overflow-hidden border-b border-slate-700">
+                    <img id="scene-image" class="w-full h-full object-cover opacity-0 transition-opacity duration-1000" alt="Scene">
+                    <div id="image-loader" class="absolute inset-0 image-skeleton flex items-center justify-center">
+                        <span class="text-slate-400 text-sm font-mono tracking-widest uppercase animate-pulse">Dreaming Scene...</span>
+                    </div>
+                </div>
+
+                <!-- Text Content -->
+                <div class="p-6 sm:p-8 space-y-6">
+                    <div id="scene-text" class="text-lg sm:text-xl leading-relaxed text-slate-200 fade-in">
+                        <!-- Story text goes here -->
+                    </div>
+
+                    <!-- Choices -->
+                    <div id="choices-container" class="space-y-3 pt-4 border-t border-slate-800">
+                        <!-- Buttons injected here -->
+                    </div>
+                    
+                    <!-- Text Loader -->
+                    <div id="text-loader" class="hidden space-y-2 animate-pulse">
+                        <div class="h-4 bg-slate-700 rounded w-3/4"></div>
+                        <div class="h-4 bg-slate-700 rounded w-full"></div>
+                        <div class="h-4 bg-slate-700 rounded w-5/6"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Notification -->
+            <div id="error-toast" class="hidden absolute bottom-4 left-4 right-4 bg-red-900/90 border border-red-500 text-red-100 p-4 rounded-lg text-center backdrop-blur shadow-lg">
+                <p id="error-msg">Something went wrong.</p>
+                <button onclick="retryTurn()" class="mt-2 text-xs uppercase tracking-wide font-bold underline">Retry</button>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // --- Config ---
+        const apiKey = ""; // Provided by environment
+        const textApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+        const imageApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
+
+        // --- State ---
+        let state = {
+            genre: "",
+            history: [], // Array of { role: "user" | "model", text: string }
+            turn: 0
+        };
+
+        // --- DOM Elements ---
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const sceneImage = document.getElementById('scene-image');
+        const imageLoader = document.getElementById('image-loader');
+        const sceneText = document.getElementById('scene-text');
+        const choicesContainer = document.getElementById('choices-container');
+        const textLoader = document.getElementById('text-loader');
+        const turnCount = document.getElementById('turn-count');
+        const errorToast = document.getElementById('error-toast');
+        const errorMsg = document.getElementById('error-msg');
+
+        // --- Game Logic ---
+
+        function startGame(genre) {
+            state.genre = genre;
+            state.history = [];
+            state.turn = 1;
+            
+            // UI Transition
+            startScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            gameScreen.classList.add('flex');
+            
+            // Initial Prompt
+            const prompt = `Begin a new interactive text adventure in the '${genre}' genre. 
+            You are the narrator. Set the scene vividly.
+            Provide 3 distinct choices for the player to advance the story.`;
+            
+            executeTurn(prompt);
+        }
+
+        async function executeTurn(userAction) {
+            // Update UI
+            turnCount.textContent = state.turn;
+            choicesContainer.innerHTML = ''; // Clear old buttons
+            textLoader.classList.remove('hidden');
+            errorToast.classList.add('hidden');
+
+            // 1. Generate Story (Text)
+            try {
+                const storyData = await generateStory(userAction);
+                
+                // Hide Text Loader
+                textLoader.classList.add('hidden');
+                
+                // Render Text
+                typewriterEffect(sceneText, storyData.description);
+                
+                // Render Buttons
+                renderChoices(storyData.choices);
+
+                // 2. Generate Image (Parallel)
+                // We pass the "visualPrompt" generated by the LLM
+                generateSceneImage(storyData.visualPrompt, state.genre);
+
+                // Update State
+                state.history.push({ role: "user", parts: [{ text: userAction }] });
+                state.history.push({ role: "model", parts: [{ text: JSON.stringify(storyData) }] });
+                state.turn++;
+
+            } catch (error) {
+                console.error(error);
+                showError("The threads of fate tangled. (API Error)");
+                textLoader.classList.add('hidden');
+            }
+        }
+
+        async function generateStory(action) {
+            // System instructions to ensure JSON output
+            const systemInstruction = `
+                You are a master storyteller running a text adventure game.
+                
+                RESPONSE FORMAT:
+                You must return a STRICT JSON object with no markdown formatting.
+                {
+                    "description": "A vivid, atmospheric paragraph (approx 60-80 words) describing the current scene and the outcome of the user's action.",
+                    "choices": [
+                        "Choice 1 text (short action)",
+                        "Choice 2 text (short action)",
+                        "Choice 3 text (short action)"
+                    ],
+                    "visualPrompt": "A highly detailed visual description of this scene for an image generator. Focus on lighting, composition, and mood. No text."
+                }
+            `;
+
+            // Build context (keep last 6 turns to save tokens but maintain recent context)
+            const recentHistory = state.history.slice(-6); 
+            
+            const payload = {
+                contents: [
+                    ...recentHistory,
+                    { role: "user", parts: [{ text: action }] }
+                ],
+                systemInstruction: { parts: [{ text: systemInstruction }] },
+                generationConfig: { responseMimeType: "application/json" }
+            };
+
+            const response = await fetch(textApiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) throw new Error("Story Generation Failed");
+
+            const data = await response.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            return JSON.parse(text);
+        }
+
+        async function generateSceneImage(visualPrompt, style) {
+            // Reset Image UI
+            sceneImage.style.opacity = '0';
+            imageLoader.classList.remove('hidden');
+
+            const fullPrompt = `${style} style art. ${visualPrompt}. High quality, cinematic lighting, detailed.`;
+
+            const payload = {
+                instances: [{ prompt: fullPrompt }],
+                parameters: { sampleCount: 1 }
+            };
+
+            try {
+                const response = await fetch(imageApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("Image Generation Failed");
+
+                const result = await response.json();
+                const base64 = result.predictions?.[0]?.bytesBase64Encoded;
+                
+                if (base64) {
+                    sceneImage.src = `data:image/png;base64,${base64}`;
+                    // Fade in image once loaded
+                    sceneImage.onload = () => {
+                        imageLoader.classList.add('hidden');
+                        sceneImage.style.opacity = '1';
+                    };
+                }
+            } catch (error) {
+                console.warn("Image gen failed:", error);
+                // On fail, just hide loader, show a placeholder or keep previous
+                imageLoader.classList.add('hidden');
+                // Optional: set a fallback image or color
+            }
+        }
+
+        // --- UI Helpers ---
+
+        function renderChoices(choices) {
+            choices.forEach(choiceText => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-lg bg-slate-800 hover:bg-indigo-900/50 border border-slate-700 hover:border-indigo-500 transition-all text-slate-300 hover:text-white font-medium flex items-center gap-3 group animate-in slide-in-from-bottom-2 fade-in";
+                btn.innerHTML = `
+                    <span class="text-indigo-500 group-hover:translate-x-1 transition-transform">➤</span>
+                    ${choiceText}
+                `;
+                btn.onclick = () => executeTurn(choiceText);
+                choicesContainer.appendChild(btn);
+            });
+        }
+
+        function typewriterEffect(element, text, speed = 10) {
+            element.innerHTML = "";
+            let i = 0;
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                }
+            }
+            type();
+        }
+
+        function showError(msg) {
+            errorMsg.textContent = msg;
+            errorToast.classList.remove('hidden');
+        }
+
+        function retryTurn() {
+            // Re-submit the last user action
+            const lastUserAction = state.history[state.history.length - 1]?.parts[0]?.text || "Start";
+            executeTurn(lastUserAction);
+        }
+
+    </script>
+</body>
+</html>
